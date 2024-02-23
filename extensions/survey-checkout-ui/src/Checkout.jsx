@@ -10,6 +10,7 @@ import {
   useStorage,
 } from '@shopify/ui-extensions-react/checkout';
 import {useCallback, useEffect, useState} from 'react';
+
 // [START order-status.extension-point]
 // Allow the attribution survey to display on the thank you page.
 const thankYouBlock = reactExtension("purchase.thank-you.block.render", () => <Attribution />);
