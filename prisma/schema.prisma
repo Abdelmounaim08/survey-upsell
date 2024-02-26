@@ -20,3 +20,20 @@ model Session {
   accessToken String
   userId      BigInt?
 }
+model Question {
+  question_id  Int       @id @default(autoincrement())
+  content      String
+  question_type String  // Utilisez String au lieu de QuestionType
+  responses    Response[]
+}
+
+
+
+model Response {
+  response_id  Int    @id @default(autoincrement())
+  content      String
+  question_id  Int
+  response_type String 
+  question     Question @relation(fields: [question_id], references: [question_id])
+}
+
