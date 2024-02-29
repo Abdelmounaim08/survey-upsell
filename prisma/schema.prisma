@@ -20,20 +20,53 @@ model Session {
   accessToken String
   userId      BigInt?
 }
-model Question {
-  question_id  Int       @id @default(autoincrement())
-  content      String
-  question_type String  // Utilisez String au lieu de QuestionType
-  responses    Response[]
+
+model Survey {
+  survey_id  Int          @id @default(autoincrement())
+  title      String
+  questions  Question[]
+
+
 }
 
+model Question {
+  question_id   Int        @id @default(autoincrement())
+  content       String
+  question_type String
+  responses     Response[]
+  survey_id     Int
+  survey        Survey     @relation(fields: [survey_id], references: [survey_id])
 
+  QuestionReponse QuestionReponse[]
+}
 
 model Response {
-  response_id  Int    @id @default(autoincrement())
-  content      String
-  question_id  Int
-  response_type String 
-  question     Question @relation(fields: [question_id], references: [question_id])
+  response_id     Int               @id @default(autoincrement())
+  content         String
+  response_type   String
+  question_id     Int
+  survey_id       Int
+  question        Question          @relation(fields: [question_id], references: [question_id])
+  survey          Survey            @relation(fields: [survey_id], references: [survey_id])
+  QuestionReponse QuestionReponse[]
 }
 
+model DataClient {
+  Answer_id     Int               @id @default(autoincrement())
+  email         String
+  id_order      Int
+  survey_id     Int
+  user_response String
+  question_rep  QuestionReponse[]
+  survey        Survey            @relation(fields: [survey_id], references: [survey_id])
+}
+
+model QuestionReponse {
+  id           Int        @id @default(autoincrement())
+  question_id  Int
+  response_id  Int
+  dataClientId Int
+  question     Question   @relation(fields: [question_id], references: [question_id])
+  response     Response   @relation(fields: [response_id], references: [response_id])
+  dataClient   DataClient @relation(fields: [dataClientId], references: [Answer_id])
+}

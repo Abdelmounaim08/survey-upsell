@@ -104,6 +104,7 @@ function ProductReview() {
           <Choice id="4">It's okay, I expected more.</Choice>
           <Choice id="3">Eh. There are better options out there.</Choice>
           <Choice id="2">I regret the purchase.</Choice>
+          
         </BlockStack>
       </ChoiceList>
     </Survey>
@@ -132,6 +133,7 @@ function Survey({
         <BlockStack>
           <Heading>Thanks for your feedback!</Heading>
           <Text>Your response has been submitted</Text>
+          
         </BlockStack>
       </View>
     );
@@ -139,7 +141,9 @@ function Survey({
 
   return (
     <View border="base" padding="base" borderRadius="base">
+      
       <BlockStack>
+      
         <Heading>{title}</Heading>
         <Text>{description}</Text>
         {children}
