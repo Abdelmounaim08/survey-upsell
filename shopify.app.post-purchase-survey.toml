@@ -2,7 +2,7 @@
 
 client_id = "81b6e009368eb3d5d30e5898404c1945"
 name = "Post-Purchase-Survey"
-application_url = "https://yet-peterson-usual-treat.trycloudflare.com"
+application_url = "https://worlds-resource-promoted-losing.trycloudflare.com"
 embedded = true
 
 [build]
@@ -16,9 +16,9 @@ scopes = ""
 
 [auth]
 redirect_urls = [
-  "https://yet-peterson-usual-treat.trycloudflare.com/auth/callback",
-  "https://yet-peterson-usual-treat.trycloudflare.com/auth/shopify/callback",
-  "https://yet-peterson-usual-treat.trycloudflare.com/api/auth/callback"
+  "https://worlds-resource-promoted-losing.trycloudflare.com/auth/callback",
+  "https://worlds-resource-promoted-losing.trycloudflare.com/auth/shopify/callback",
+  "https://worlds-resource-promoted-losing.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]
