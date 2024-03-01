@@ -8,35 +8,43 @@ import {
   Choice,
   Button,
   useStorage,
-} from '@shopify/ui-extensions-react/checkout';
-import {useCallback, useEffect, useState} from 'react';
+} from "@shopify/ui-extensions-react/checkout";
+import { useCallback, useEffect, useState } from "react";
 
 // [START order-status.extension-point]
 // Allow the attribution survey to display on the thank you page.
-const thankYouBlock = reactExtension("purchase.thank-you.block.render", () => <Attribution />);
+const thankYouBlock = reactExtension("purchase.thank-you.block.render", () => (
+  <Attribution />
+));
 export { thankYouBlock };
 
-const orderDetailsBlock = reactExtension("customer-account.order-status.block.render", () => <ProductReview />);
+const orderDetailsBlock = reactExtension(
+  "customer-account.order-status.block.render",
+  () => <ProductReview />,
+);
 export { orderDetailsBlock };
 // [END order-status.extension-point]
 // [START order-status.attribution-survey]
 function Attribution() {
-  const [attribution, setAttribution] = useState('');
+  const [attribution, setAttribution] = useState("");
   const [loading, setLoading] = useState(false);
   // Store into local storage if the attribution survey was completed by the customer.
-  const [attributionSubmitted, setAttributionSubmitted] = useStorageState('attribution-submitted')
+  const [attributionSubmitted, setAttributionSubmitted] = useStorageState(
+    "attribution-submitted",
+  );
 
   async function handleSubmit() {
     // Simulate a server request
     setLoading(true);
     return new Promise((resolve) => {
       setTimeout(() => {
-      // Send the review to the server
-      console.log('Submitted:', attribution);
-      setLoading(false);
-      setAttributionSubmitted(true)
-      resolve();
-    }, 750)});
+        // Send the review to the server
+        console.log("Submitted:", attribution);
+        setLoading(false);
+        setAttributionSubmitted(true);
+        resolve();
+      }, 750);
+    });
   }
 
   // Hides the survey if the attribution has already been submitted
@@ -45,7 +53,11 @@ function Attribution() {
   }
 
   return (
-    <Survey title="How did you hear about us ?" onSubmit={handleSubmit} loading={loading}>
+    <Survey
+      title="How did you hear about us ?"
+      onSubmit={handleSubmit}
+      loading={loading}
+    >
       <ChoiceList
         name="sale-attribution"
         value={attribution}
@@ -65,22 +77,24 @@ function Attribution() {
 
 // [START order-status.product-review]
 function ProductReview() {
-  const [productReview, setProductReview] = useState('');
+  const [productReview, setProductReview] = useState("");
   const [loading, setLoading] = useState(false);
   // Store into local storage if the product was reviewed by the customer.
-  const [productReviewed, setProductReviewed] = useStorageState('product-reviewed')
+  const [productReviewed, setProductReviewed] =
+    useStorageState("product-reviewed");
 
   async function handleSubmit() {
     // Simulate a server request
     setLoading(true);
     return new Promise((resolve) => {
       setTimeout(() => {
-      // Send the review to the server
-      console.log('Submitted:', productReview);
-      setLoading(false);
-      setProductReviewed(true);
-      resolve();
-    }, 750)});
+        // Send the review to the server
+        console.log("Submitted:", productReview);
+        setLoading(false);
+        setProductReviewed(true);
+        resolve();
+      }, 750);
+    });
   }
 
   // Hides the survey if the product has already been reviewed
@@ -113,13 +127,7 @@ function ProductReview() {
 // [END order-status.product-review]
 
 // [START order-status.survey-component]
-function Survey({
-  title,
-  description,
-  onSubmit,
-  children,
-  loading,
-}) {
+function Survey({ title, description, onSubmit, children, loading }) {
   const [submitted, setSubmitted] = useState(false);
 
   async function handleSubmit() {
@@ -159,22 +167,25 @@ function Survey({
  */
 function useStorageState(key) {
   const storage = useStorage();
-  const [data, setData] = useState()
-  const [loading, setLoading] = useState(true)
+  const [data, setData] = useState();
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function queryStorage() {
-      const value = await storage.read(key)
+      const value = await storage.read(key);
       setData(value);
-      setLoading(false)
+      setLoading(false);
     }
 
     queryStorage();
-  }, [setData, setLoading, storage, key])
+  }, [setData, setLoading, storage, key]);
 
-  const setStorage = useCallback((value) => {
-    storage.write(key, value)
-  }, [storage, key])
+  const setStorage = useCallback(
+    (value) => {
+      storage.write(key, value);
+    },
+    [storage, key],
+  );
 
-  return [{data, loading}, setStorage]
+  return [{ data, loading }, setStorage];
 }

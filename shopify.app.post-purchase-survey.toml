@@ -2,7 +2,7 @@
 
 client_id = "81b6e009368eb3d5d30e5898404c1945"
 name = "Post-Purchase-Survey"
-application_url = "https://worlds-resource-promoted-losing.trycloudflare.com"
+application_url = "https://latest-spatial-substantially-membrane.trycloudflare.com"
 embedded = true
 
 [build]
@@ -16,9 +16,9 @@ scopes = ""
 
 [auth]
 redirect_urls = [
-  "https://worlds-resource-promoted-losing.trycloudflare.com/auth/callback",
-  "https://worlds-resource-promoted-losing.trycloudflare.com/auth/shopify/callback",
-  "https://worlds-resource-promoted-losing.trycloudflare.com/api/auth/callback"
+  "https://latest-spatial-substantially-membrane.trycloudflare.com/auth/callback",
+  "https://latest-spatial-substantially-membrane.trycloudflare.com/auth/shopify/callback",
+  "https://latest-spatial-substantially-membrane.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]
