@@ -3,6 +3,7 @@
 
 generator client {
   provider = "prisma-client-js"
+  
 }
 
 datasource db {
@@ -22,51 +23,47 @@ model Session {
 }
 
 model Survey {
-  survey_id  Int          @id @default(autoincrement())
+  survey_id  Int         @id @default(autoincrement())
   title      String
   questions  Question[]
-
-
+  responses   Response[]
+  DataClient DataClient?
 }
 
 model Question {
-  question_id   Int        @id @default(autoincrement())
-  content       String
-  question_type String
-  responses     Response[]
-  survey_id     Int
-  survey        Survey     @relation(fields: [survey_id], references: [survey_id])
-
-  QuestionReponse QuestionReponse[]
+  question_id     Int              @id @default(autoincrement())
+  content         String
+  question_type   String
+  responses       Response[]
+  survey_id       Int
+  survey          Survey           @relation(fields: [survey_id], references: [survey_id])
+  QuestionReponse QuestionReponse?
 }
 
 model Response {
-  response_id     Int               @id @default(autoincrement())
-  content         String
-  response_type   String
-  question_id     Int
-  survey_id       Int
-  question        Question          @relation(fields: [question_id], references: [question_id])
-  survey          Survey            @relation(fields: [survey_id], references: [survey_id])
-  QuestionReponse QuestionReponse[]
+  response_id   Int      @id @default(autoincrement())
+  content       String
+  question_id   Int
+  survey_id     Int
+  question      Question @relation(fields: [question_id], references: [question_id])
+  survey        Survey   @relation(fields: [survey_id], references: [survey_id])
+
 }
 
 model DataClient {
-  Answer_id     Int               @id @default(autoincrement())
+  dataClientId  Int               @id @default(autoincrement())
   email         String
   id_order      Int
-  survey_id     Int
-  user_response String
+  survey_id     Int               @unique
   question_rep  QuestionReponse[]
+  user_response String
   survey        Survey            @relation(fields: [survey_id], references: [survey_id])
 }
 
 model QuestionReponse {
   id           Int        @id @default(autoincrement())
-  question_id  Int
-  response_id  Int
-  dataClientId Int
+  question_id  Int        @unique
   question     Question   @relation(fields: [question_id], references: [question_id])
-  response     Response   @relation(fields: [response_id], references: [response_id])
-  dataClient   DataClient @relation(fields: [dataClientId], references: [Answer_id])
+  dataClientId Int        @unique
+  dataClient   DataClient @relation(fields: [dataClientId], references: [dataClientId])
 }
