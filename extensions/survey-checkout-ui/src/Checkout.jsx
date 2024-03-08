@@ -1,3 +1,5 @@
+/* eslint-disable array-callback-return */
+/* eslint-disable react/jsx-key */
 import {
   reactExtension,
   BlockStack,
@@ -8,22 +10,68 @@ import {
   Choice,
   Button,
   useStorage,
+  useApi,
 } from '@shopify/ui-extensions-react/checkout';
+import { TextField } from '@shopify/ui-extensions/checkout';
 import {useCallback, useEffect, useState} from 'react';
-// [START order-status.extension-point]
 // Allow the attribution survey to display on the thank you page.
 const thankYouBlock = reactExtension("purchase.thank-you.block.render", () => <Attribution />);
 export { thankYouBlock };
 
 const orderDetailsBlock = reactExtension("customer-account.order-status.block.render", () => <ProductReview />);
 export { orderDetailsBlock };
-// [END order-status.extension-point]
-// [START order-status.attribution-survey]
+const APP_URL="https://techniques-apartments-ins-pipeline.trycloudflare.com";
+// eslint-disable-next-line no-unused-vars
+
+
 function Attribution() {
   const [attribution, setAttribution] = useState('');
   const [loading, setLoading] = useState(false);
+  const {sessionToken}=useApi();
+  const [SurveyData, setSurveyData] = useState({});
+  
   // Store into local storage if the attribution survey was completed by the customer.
-  const [attributionSubmitted, setAttributionSubmitted] = useStorageState('attribution-submitted')
+  const [attributionSubmitted, setAttributionSubmitted] = useStorageState('attribution-submitted');
+  console.log('Survey//* :', SurveyData);
+  useEffect(()=>{
+  
+  async function FetchfromApisSurvey() {
+    
+    const token = await sessionToken.get();
+    try {
+      const response = await fetch(`${APP_URL}/api/survey`,
+        {
+          method: 'GET',
+          mode: 'cors',
+          credentials: 'include',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+  
+      if (!response.ok) {
+        throw new Error('Erreur lors de  la récupération des sondages');
+      }
+  
+      const surveyData = await response.json();
+      setSurveyData(surveyData.surveys);
+      console.log('SurveyApi/* :', surveyData);
+      
+     
+  
+      return surveyData;
+    } catch (error) {
+      console.error('Erreur lors de la récupération des sondages :', error);
+      // Gérer l'erreur ici ou la propager vers le haut
+    }
+  
+}
+FetchfromApisSurvey()
+
+// eslint-disable-next-line react-hooks/exhaustive-deps
+},[sessionToken])
 
   async function handleSubmit() {
     // Simulate a server request
@@ -44,7 +92,9 @@ function Attribution() {
   }
 
   return (
-    <Survey title="How did you hear about us ?" onSubmit={handleSubmit} loading={loading}>
+    <>
+    
+    <Survey title="How did you hear about us ?" surveyData={SurveyData} onSubmit={handleSubmit} loading={loading}>
       <ChoiceList
         name="sale-attribution"
         value={attribution}
@@ -57,12 +107,10 @@ function Attribution() {
           <Choice id="tiktok">Tiktok</Choice>
         </BlockStack>
       </ChoiceList>
-    </Survey>
+    </Survey></>
   );
 }
-// [END order-status.attribution-survey]
 
-// [START order-status.product-review]
 function ProductReview() {
   const [productReview, setProductReview] = useState('');
   const [loading, setLoading] = useState(false);
@@ -104,21 +152,132 @@ function ProductReview() {
           <Choice id="4">It's okay, I expected more.</Choice>
           <Choice id="3">Eh. There are better options out there.</Choice>
           <Choice id="2">I regret the purchase.</Choice>
-          
         </BlockStack>
       </ChoiceList>
     </Survey>
   );
 }
-// [END order-status.product-review]
-
-// [START order-status.survey-component]
 function Survey({
   title,
   description,
   onSubmit,
   children,
   loading,
+  surveyData,
+}) {
+  const [submitted, setSubmitted] = useState(false);
+  const [responses, setResponses] = useState({});
+  
+  async function handleSubmit() {
+    await onSubmit();
+    setSubmitted(true);
+  }
+
+  const handleResponseChange = (questionId, value) => {
+    setResponses((prevResponses) => ({
+      ...prevResponses,
+      [questionId]: value,
+    }));
+  };
+
+  const renderResponses = (question) => {
+    const questionId = question.question_id;
+   //const filterRes=surveyData.response.filter((res)=>res.
+   // eslint-disable-next-line array-callback-return
+   
+    if (question.question_type === 'text') {
+      return (
+        <TextField
+          value={responses[questionId]?.content || ''}
+          onChange={(e) => handleResponseChange(questionId, { content: e.target.value })}
+        />
+      );
+    }
+  
+    // Checkbox or radio
+    return (
+      <ChoiceList
+        name={`question-${questionId}`}
+        selected={responses[questionId]?.content || []}
+        onChange={(value) => handleResponseChange(questionId, { content: value })}
+      >
+        <BlockStack>
+          {surveyData.responses.map((response) => (
+            //console.log(response.res);
+            response.res.map((res)=>{
+              <Choice key={res.content} id={res.content}>
+              {res.content}
+            </Choice>
+            })
+            
+          ))}
+        </BlockStack>
+      </ChoiceList>
+    );
+  };
+  
+
+  if (submitted) {
+    return (
+      <View border="base" padding="base" borderRadius="base">
+        <BlockStack>
+          <Heading>Thanks for your feedback!</Heading>
+          <Text>Your response has been submitted</Text>
+        </BlockStack>
+      </View>
+    );
+  }
+
+  return (
+    <>
+      {surveyData.length > 0 ? (
+        surveyData.map((surveyItem, index) => (
+          <View key={index} border="base" padding="base" borderRadius="base">
+            <BlockStack>
+              <Heading>{surveyItem.title}</Heading>
+              <Text>{title}</Text>
+              <Text>{description}</Text>
+              {children}
+            
+              {surveyItem.questions.map((question) => (
+                
+              <View key={question.question_id} padding="base">
+                <Heading>{question.content}</Heading>
+                {renderResponses(question)}
+              </View>
+            ))}
+              <Button kind="secondary" onPress={handleSubmit} loading={loading}>
+                Submit feedback
+              </Button>
+            </BlockStack>
+
+            {/* Afficher les réponses de chaque question */}
+            
+          </View>
+        ))
+      ) : (
+        <View border="base" padding="base" borderRadius="base">
+          <BlockStack>
+            <Heading>{title}</Heading>
+            <Text>{description}</Text>
+            {children}
+            <Button kind="secondary" onPress={handleSubmit} loading={loading}>
+              Submit feedback
+            </Button>
+          </BlockStack>
+        </View>
+      )}
+    </>
+  );
+}
+
+/*function Survey({
+  title,
+  description,
+  onSubmit,
+  children,
+  loading,
+  surveyData,
 }) {
   const [submitted, setSubmitted] = useState(false);
 
@@ -133,28 +292,44 @@ function Survey({
         <BlockStack>
           <Heading>Thanks for your feedback!</Heading>
           <Text>Your response has been submitted</Text>
-          
         </BlockStack>
       </View>
     );
   }
 
   return (
-    <View border="base" padding="base" borderRadius="base">
-      
-      <BlockStack>
-      
-        <Heading>{title}</Heading>
-        <Text>{description}</Text>
-        {children}
-        <Button kind="secondary" onPress={handleSubmit} loading={loading}>
-          Submit feedback
-        </Button>
-      </BlockStack>
-    </View>
+    <>
+    
+    {surveyData.length > 0 ? (
+        surveyData.map((surveyItem, index) => (
+          <View key={index} border="base" padding="base" borderRadius="base">
+            <BlockStack>
+              <Heading >{surveyItem.title}</Heading >
+              <Text>{surveyItem.questions[0].content}</Text>
+              <Text>{description}</Text>
+              {children}
+              <Button kind="secondary" onPress={handleSubmit} loading={loading}>
+                Submit feedback
+              </Button>
+            </BlockStack>
+          </View>
+        ))
+      ) : (
+        <View border="base" padding="base" borderRadius="base">
+          <BlockStack>
+            <Heading>{title}</Heading>
+            <Text>{description}</Text>
+            {children}
+            <Button kind="secondary" onPress={handleSubmit} loading={loading}>
+              Submit feedback
+            </Button>
+          </BlockStack>
+        </View>
+      )}
+   
+  </>
   );
-}
-// [END order-status.survey-component]
+}*/
 
 /**
  * Returns a piece of state that is persisted in local storage, and a function to update it.

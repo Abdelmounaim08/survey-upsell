@@ -1,372 +1,207 @@
-import { Page, Badge, LegacyCard, Grid, FormLayout, TextField, Select, Button, PageActions } from '@shopify/polaris';
-import React, { useCallback, useState } from 'react';
-
-import db from "../db.server"
+import type { ActionFunction, LoaderFunction } from "@remix-run/node";
+import {  Form, useLoaderData, useSubmit } from "@remix-run/react";
+import { Button, InlineGrid, LegacyCard, Page } from "@shopify/polaris";
+import { useState, type ReactNode } from "react";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { json} from '@remix-run/node';
-import type { ActionFunction,  LoaderFunction } from '@remix-run/node';
-import { Form, useSubmit } from '@remix-run/react';
-//import { PrismaClient } from "@prisma/client";
-export const action: ActionFunction = async ({ request }) => {
-  const formData = await request.formData();
-  const title = formData.get('title');
+import type { JSX } from "react/jsx-runtime";
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import { ListSurvey ,reponseSurve ,deleteSurv} from "~/model/survey.server";
+import { authenticate } from "~/shopify.server";
+import db from "../db.server"
 
-  const questions = [];
-  let questionIndex = 0;
 
-  while (formData.has(`questions[${questionIndex}][content]`)) {
-    const content = formData.get(`questions[${questionIndex}][content]`);
-    const questionType = formData.get(`questions[${questionIndex}][question_type]`);
+export type LoaderDataprops = {
+  render:boolean
+  IDsurvey:Number
+  IDsurveyDel:Number
+  Delete:boolean
+  updated:boolean
+}
+export const action:ActionFunction = async ({request}) =>{
 
-    const responses = [];
-    let responseIndex = 0;
-
-    while (formData.has(`questions[${questionIndex}][responses][${responseIndex}][content]`)) {
-      const responseContent = formData.get(`questions[${questionIndex}][responses][${responseIndex}][content]`);
-      responses.push({ content: responseContent });
-      responseIndex++;
-    }
-
-    questions.push({ content, question_type: questionType, responses });
-    questionIndex++;
-  }
-
-  // Maintenant, vous avez un objet avec les données du formulaire que vous pouvez utiliser pour créer le sondage.
-  //console.log(questions);
- /*
-  questions.forEach((question, index) => {
-    console.log(`Question ${index + 1}:`);
-    console.log(`Content: ${question.content}`);
-    console.log(`Type: ${question.question_type}`);
-    
-    console.log("Responses:");
-    question.responses.forEach((response, responseIndex) => {
-      console.log(`  Response ${responseIndex + 1}: ${response.content}`);
-      
-    });
-  });*/
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { session } = await authenticate.admin(request);    
   
-  try {
-    // Créer le sondage
-    const survey = await db.survey.create({
-      data: {
-        title,
-      },
-    });
+  const data = {
+        ...Object.fromEntries(await request.formData()),
+      };
+  const render  = data.render == "true" ;
+  //const Delete  = data.Delete == "true" ;
+ // const updated  = data.updated == "true" ;
+  const IDsurvey = Number(data.IDsurvey);
+  //const IDsurveyDel = Number(data.IDsurveyDel);
 
-    // Créer les questions et les réponses
-    for (const questionData of questions) {
-      const question = await prisma.question.create({
-        data: {
-          content: questionData.content,
-          question_type: questionData.question_type,
-          survey: {
-            connect: { survey_id: survey.survey_id },
-          },
-           // Remplacez par le type de question approprié
-        },
-      });
-
-      // Créer les réponses pour chaque question
-      for (const responseContent of questionData.responses) {
-        await db.response.create({
+  const updatedSurvey = await db.survey.update({
+                              where: { survey_id: IDsurvey },
+                              data: { 
+                                render: render,
+                               
+                               },
+                            });
+       console.log(updatedSurvey)
+       if (render) {
+        const updatedOtherSurveys = await db.survey.updateMany({
+          where: { survey_id: { not: IDsurvey } },
           data: {
-            content: responseContent.content,
-            question: {
-              connect: { question_id: question.question_id },
-            },
-            survey: {
-              connect: { survey_id: survey.survey_id },
-            },
+            render: false,
           },
         });
-      }
-    }
+        console.log(updatedOtherSurveys)
+    return null
+}}
 
-  
-
-  
-    
-    console.log("New survey created:",  survey , 
-                '/question',questions );
-  
-  
-    // Retournez une réponse appropriée ici si nécessaire
-  } catch (error) {
-    console.error("Error creating survey:", error);
-    throw error;
-  }
-   
-
-  
-  // Retournez une réponse appropriée ici si nécessaire
-  return null
-}
-
-
-
- /* const newSurvey=await db.survey.create({
-    data: {
-      title: surveyData.title,
-      questions: {
-        create: surveyData.questions.map((question: { content: any; question_type: any; responses: any[]; }) => ({
-          content: question.content,
-          question_type: question.question_type,
-          responses: {
-            create: question.responses.map((response, index) => ({
-              content: response.content,
-              // Assurez-vous que le nom du champ correspond à votre modèle Prisma
-            })),
-          },
-        })),
-      },}
-  })}
-   console.log("New survey created:", newSurvey);*/
-  
 
 
 export let loader: LoaderFunction = async ({ request }) => {
-  // Assuming you receive survey data in the request
-  // Disconnect Prisma client after use
-  return null
-};
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { session } = await authenticate.admin(request);
+    const AllSurvey :any = await ListSurvey();
+  /*
+    for (const surveyItem of AllSurvey) {
+      const responses :any = await reponseSurve(surveyItem.survey_id);
+      console.log(`Survey Title: ${surveyItem.title}`);
+      console.log("Questions:");
+      for (const question of surveyItem.questions) {
+        console.log(`  Question ID: ${question.question_id}`);
+        console.log(`  Content: ${question.content}`);
+        console.log(`  Question Type: ${question.question_type}`);
+        console.log("  Responses:");
+        for (const response of responses) {
+          console.log(`    Response Content: ${response.content}`);
+          // Ajoutez d'autres détails de la réponse ici si nécessaire
+        }
+      }
+      console.log("------------------------------");
+    }
+  */
+    return AllSurvey;
+  };
+  
+  
+ 
 
 export default function Survey() {
-  const [selectedNumber, setSelectedNumber] = useState("1");
-  const [TitleSurvey, setTitleSurvey] = useState("");
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [Action, setAction] = useState(true);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [surveyData, setSurveyData] = useState({});
-  
-  const [Question, setResponse] = useState<Array<{
-    question: string;
-    type: string;
-    responses: string[];
-    isQuestionOpen: boolean;
-    isValidated: boolean;
-  }>>([]);
-  const [questionTextValues, setQuestionTextValues] = useState<string[]>(Array(10).fill(''));
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [isFormOpen, setIsFormOpen] = useState(true);
-const [isQuestionValidated, setIsQuestionValidated] = useState<boolean[]>(Array(Response.length).fill(false));
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const [isQuestionFormOpen, setIsQuestionFormOpen] = useState<boolean[]>(Array(Response.length).fill(true));
-const [selectedType, setSelectedType] = useState("Radio");
-  const [NumQST, setNumQST] = useState(1);
-  const numbers = Array.from({ length: parseInt(selectedNumber, 10) }, (_, index) => index + 1);
-  const [addedQuestions, setAddedQuestions] = useState<number[]>([]);
-
-  const handleNumberChange = (selected: string) => {
-    setSelectedNumber(selected);
-  };
-
-  const handleTypeChange = (selected: string) => {
-    setSelectedType(selected);
-  };
-
-  const handleResponseChange = (questionIndex: number, responseIndex: number, value: string) => {
-    const updatedResponse = [...Question];
-    updatedResponse[questionIndex].responses[responseIndex] = value;
-    setResponse(updatedResponse);
-  };
-  const submit = useSubmit();
-
-
-  const addQuestion = (num: any) => {
-    setResponse([
-      ...Question,
-      {
-        question: questionTextValues[num - 1],
-        type: selectedType,
-        responses: Array(4).fill(''),
-        isQuestionOpen: true,
-        isValidated: false,
-      },
-    ]);
-    setIsQuestionValidated([...isQuestionValidated, false]);
-    setNumQST(num + 1);
-    setAddedQuestions([...addedQuestions, num]);
-  };
-  const handleAnswerValidation = (questionIndex: number) => {
-    setIsQuestionValidated((prevState: any) => {
-      const newState = [...prevState];
-      newState[questionIndex] = true;
-      return newState;
-    });
-    setIsQuestionFormOpen((prevState: any) => {
-      const newState = [...prevState];
-      newState[questionIndex] = false;
-      return newState;
-    });
-    
-    console.log("Validation réussie pour la question", questionIndex + 1);
-  };
-  
-
-
-  const types = ['Radio', 'checkbox', 'text'];
-  const options = Array.from({ length: 10 }, (_, index) => ({
-    label: (index + 1).toString(),
-    value: (index + 1).toString(),
-  }));
-  const handleChange =useCallback (
-    (newValue: string) => setTitleSurvey(newValue),
-    [],
-  ) 
+    const survey:any = useLoaderData();
+    const [render,setRender]=useState(false);
    
-  
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-
-  //console.log(surveyData)
-  const Save = async () => {
-    const formData = new FormData();
-    formData.append('title', TitleSurvey);
-  
-    // Ajoutez chaque question et ses réponses au formulaire
-    Question.forEach((questionItem: { question: string | Blob; type: string | Blob; responses: any[]; }, questionIndex: any) => {
-      formData.append(`questions[${questionIndex}][content]`, questionItem.question);
-      formData.append(`questions[${questionIndex}][question_type]`, questionItem.type);
-  
-      questionItem.responses.forEach((response, responseIndex) => {
-        formData.append(`questions[${questionIndex}][responses][${responseIndex}][content]`, response);
-      });
-    });
-  
-    // Utilisez le formulaire pour envoyer les données
-    submit(formData, { method: "post" });
-  
-    // Effectuez d'autres opérations après l'enregistrement réussi
-  };
-  
+    const [IDsurvey,setIDsurvey]=useState<number | undefined>();
+    const [IDsurveyDel,setIDsurveyDel]=useState<number | undefined>();
+    const [disable,setdisable]=useState(true);
+    const [Delete,setdelete]=useState(false);
+    const submit = useSubmit();
     
+    function RenderSurvey(id:Number) {
+      setRender(true);
+      setIDsurvey(id);
+      setdisable(false);
   
-  return (
-   
-    <><Page
-      title="Add a survey"
-      titleMetadata={<Badge tone="attention">Verified</Badge>}
-
-    >
-      <Page fullWidth>
-        <Grid>
-          <Grid.Cell columnSpan={{ xs: 6, sm: 3, md: 3, lg: 6, xl: 6 }}>
-            <LegacyCard title="Survey" sectioned>
-              <FormLayout>
-                <TextField label="Title" onChange={handleChange} value={TitleSurvey} autoComplete="off" />
-                <LegacyCard title="Question" sectioned>
-
-
-
-                  <Select
-                    label="Select the number of questions:"
-                    options={options}
-                    onChange={(selected: string) => handleNumberChange(selected)}
-                    value={selectedNumber} />
-                  <div>
-                    {parseInt(selectedNumber, 10) > 0 &&
-                      numbers.map((number) => (
-                        // eslint-disable-next-line react/jsx-key
-                        <LegacyCard title={`Question number ${number}`} key={number} sectioned>
-
-
-                          <Select
-                            label="Select the type of questions:"
-                            options={types}
-                            onChange={(selected: string) => handleTypeChange(selected)}
-                            value={selectedType} />
-                          <TextField
-                            label='write your question'
-                            type="text"
-                            placeholder={`Input ${number}`}
-                            value={questionTextValues[number - 1]}
-                            onChange={(value: any) => {
-                              const updatedValues = [...questionTextValues];
-                              updatedValues[number - 1] = value;
-                              setQuestionTextValues(updatedValues);
-                            } }
-                            autoComplete="off" />
-                          <Button
-                            onClick={() => addQuestion(number)}
-                            disabled={addedQuestions.includes(number)}
-                          >
-                            Add Question
-                          </Button>
-                        </LegacyCard>
-                      ))}
-
-                  </div>
-
+      console.log('disable :',disable,'/IDsurvey',IDsurvey,"render",render)
+    }
+    function deleteSu(id:Number) {
+    
+      setIDsurveyDel(id);
+      setdelete(true);
+      setdisable(false);
+    }
+    
+    
+    function handleSave() {
+      const data = {
+        render:  Boolean(render),
+        IDsurvey:Number(IDsurvey),
+        IDsurveyDel:Number(IDsurveyDel),
+        delete:  Boolean(Delete),
+      };
+      
+      submit(data, { method: "post" });
+    }
+    const SpacingBackground = ({
+      children,
+      width = '100%',
+      height = '700px', // Ajout d'une prop de hauteur
+    }: {
+      children: React.ReactNode;
+      width?: string;
+      height?: string;
+    }) => {
+      return (
+        <div
+          style={{
+            width: 'auto',
+            height: 'auto',
+            display:"flow-root",
+            
+            flex:'700px' // Utilisation de la hauteur fournie
+          }}
+        >
+          {children}
+        </div>
+      );
+    };
+    return (
+      <>
+        <Page
+          title="List of  surveys"
+          primaryAction={{ content: 'Save', disabled: disable, onAction: handleSave }} 
+          secondaryActions={{ content: 'delete', disabled: true, onAction: deleteSu }}
+        > 
+        <div>
+          
+          
+<SpacingBackground>
+  <InlineGrid gap="400" columns={2}>
+    {survey.map((surveyItem: {
+      survey_id: number;
+      render: any;
+      title: string | number | boolean | React.ReactElement<any, string | React.JSXElementConstructor<any>> | Iterable<ReactNode> | null | undefined;
+      questions: any[];
+    }) => {
+      console.log(surveyItem.render);
+      return (
+        <div key={surveyItem.survey_id}>
+          <LegacyCard title={surveyItem.title} sectioned>
+            <div>
+              <Form method="post">
+                <Button textAlign="end" variant="primary" tone="success" onClick={() => RenderSurvey(surveyItem.survey_id)}>
+                  Rendre Survey
+                </Button>
+                <Button textAlign="end" variant="primary" tone="critical" onClick={() => deleteSu(surveyItem.survey_id)}>
+                  delete Survey
+                </Button>
+              </Form>
+            </div>
+            <p>Render: {surveyItem.render ? 'true' : 'false'}</p>
+            <p>Total Questions: {surveyItem.questions.length}</p>
+            <p>Questions:</p>
+            <div style={{height:'220px'}}>
+            {surveyItem.questions.map((question) => (
+              <div key={question.question_id}> 
+                <LegacyCard subdued >
+                  
+                <LegacyCard.Section>  
+                   <p>Content: {question.content}</p>
+                   
+                     <p>Question Type: {question.question_type}</p>
+                     </LegacyCard.Section> 
                 </LegacyCard>
-              </FormLayout>
-            </LegacyCard>
-          </Grid.Cell>
-          <Grid.Cell columnSpan={{ xs: 6, sm: 3, md: 3, lg: 6, xl: 6 }}>
-            {isFormOpen && (selectedType === 'Radio' || selectedType === 'checkbox') ? (
-              <div>
-                {Question.map((question: { question: any; responses: any[]; }, questionIndex: number) => (
-                  <LegacyCard key={questionIndex} title={`Answer${NumQST - 1}`} sectioned>
-                    {isQuestionValidated[questionIndex] ? (
-                      <div>
-                        <p>{`Question: ${question.question}`}</p>
-                        {Array.from({ length: 4 }, (_, innerResponseIndex: any) => (
-                          <div key={innerResponseIndex}>
-                            <TextField
-                              label={`Answer ${innerResponseIndex + 1}`}
-                              type="text"
-                              placeholder={`Input Answer ${innerResponseIndex + 1}`}
-                              autoComplete="off"
-                              value={question.responses[innerResponseIndex]}
-                              onChange={(value: string) => handleResponseChange(questionIndex, innerResponseIndex, value)} />
-                          </div>
-                        ))}
-                        <Button onClick={() => alert('Validation réussie pour la question')}>
-                          Afficher une alerte
-                        </Button>
-
-                      </div>
-                    ) : (
-                      <div>
-                        <p>{`Question: ${question.question}`}</p>
-                        {Array.from({ length: 4 }, (_, innerResponseIndex) => (
-                          <div key={innerResponseIndex}>
-                            <TextField
-                              label={`Answer ${innerResponseIndex + 1}`}
-                              type="text"
-                              placeholder={`Input Answer ${innerResponseIndex + 1}`}
-                              autoComplete="off"
-                              value={question.responses[innerResponseIndex]}
-                              onChange={(value) => handleResponseChange(questionIndex, innerResponseIndex, value)} />
-                          </div>
-                        ))}
-                        <Button
-                          onClick={() => {
-                            handleAnswerValidation(questionIndex);
-                          } }
-                          disabled={isQuestionValidated[questionIndex]}
-                        >
-                          Valider la réponse
-                        </Button>
-                      </div>
-                    )}
-
-                  </LegacyCard>
-                ))}
               </div>
-            ) : null}
-          </Grid.Cell>
+            ))}</div>
+          </LegacyCard>
+        </div>
+      );
+    })}
+  </InlineGrid>
+</SpacingBackground>
 
-        </Grid>
-      </Page>
-    </Page>
-    <Form method="post">
-        <Button onClick={()=> setAction(false)} >save all</Button>
-      </Form><PageActions
 
-        primaryAction={{ content: 'Save', disabled: Action, onAction: Save }} /></>
-  
-  );
+           
+        </div>
+        </Page>
+      </>
+    );
+  }
+
+function setdelete(arg0: boolean) {
+  throw new Error("Function not implemented.");
 }
-
-
-
+  

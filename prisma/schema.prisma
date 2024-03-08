@@ -28,6 +28,7 @@ model Survey {
   questions  Question[]
   responses   Response[]
   DataClient DataClient?
+  render     Boolean     @default(false)
 }
 
 model Question {
@@ -47,7 +48,7 @@ model Response {
   survey_id     Int
   question      Question @relation(fields: [question_id], references: [question_id])
   survey        Survey   @relation(fields: [survey_id], references: [survey_id])
-
+ 
 }
 
 model DataClient {

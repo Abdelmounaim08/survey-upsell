@@ -2,7 +2,7 @@
 
 client_id = "1d7fa5ef990a295b06cf81588fce4894"
 name = "post-purchase-survey"
-application_url = "https://indicated-root-construct-sofa.trycloudflare.com"
+application_url = "https://techniques-apartments-ins-pipeline.trycloudflare.com"
 embedded = true
 
 [build]
@@ -16,9 +16,9 @@ scopes = "write_products"
 
 [auth]
 redirect_urls = [
-  "https://indicated-root-construct-sofa.trycloudflare.com/auth/callback",
-  "https://indicated-root-construct-sofa.trycloudflare.com/auth/shopify/callback",
-  "https://indicated-root-construct-sofa.trycloudflare.com/api/auth/callback"
+  "https://techniques-apartments-ins-pipeline.trycloudflare.com/auth/callback",
+  "https://techniques-apartments-ins-pipeline.trycloudflare.com/auth/shopify/callback",
+  "https://techniques-apartments-ins-pipeline.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]

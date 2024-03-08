@@ -13,7 +13,8 @@ CREATE TABLE "Session" (
 -- CreateTable
 CREATE TABLE "Survey" (
     "survey_id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-    "title" TEXT NOT NULL
+    "title" TEXT NOT NULL,
+    "render" BOOLEAN NOT NULL DEFAULT false
 );
 
 -- CreateTable
@@ -53,15 +54,6 @@ CREATE TABLE "QuestionReponse" (
     CONSTRAINT "QuestionReponse_question_id_fkey" FOREIGN KEY ("question_id") REFERENCES "Question" ("question_id") ON DELETE RESTRICT ON UPDATE CASCADE,
     CONSTRAINT "QuestionReponse_dataClientId_fkey" FOREIGN KEY ("dataClientId") REFERENCES "DataClient" ("dataClientId") ON DELETE RESTRICT ON UPDATE CASCADE
 );
-
--- CreateIndex
-CREATE UNIQUE INDEX "Question_survey_id_key" ON "Question"("survey_id");
-
--- CreateIndex
-CREATE UNIQUE INDEX "Response_question_id_key" ON "Response"("question_id");
-
--- CreateIndex
-CREATE UNIQUE INDEX "Response_survey_id_key" ON "Response"("survey_id");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "DataClient_survey_id_key" ON "DataClient"("survey_id");
