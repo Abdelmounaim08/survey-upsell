@@ -2,7 +2,7 @@
 
 client_id = "1d7fa5ef990a295b06cf81588fce4894"
 name = "post-purchase-survey"
-application_url = "https://techniques-apartments-ins-pipeline.trycloudflare.com"
+application_url = "https://shop-consolidation-strange-complaint.trycloudflare.com"
 embedded = true
 
 [build]
@@ -12,13 +12,13 @@ include_config_on_deploy = true
 
 [access_scopes]
 # Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
-scopes = "write_products"
+scopes = "read_customers,read_orders,write_products"
 
 [auth]
 redirect_urls = [
-  "https://techniques-apartments-ins-pipeline.trycloudflare.com/auth/callback",
-  "https://techniques-apartments-ins-pipeline.trycloudflare.com/auth/shopify/callback",
-  "https://techniques-apartments-ins-pipeline.trycloudflare.com/api/auth/callback"
+  "https://shop-consolidation-strange-complaint.trycloudflare.com/auth/callback",
+  "https://shop-consolidation-strange-complaint.trycloudflare.com/auth/shopify/callback",
+  "https://shop-consolidation-strange-complaint.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]

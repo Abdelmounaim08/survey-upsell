@@ -56,24 +56,7 @@ export let loader: LoaderFunction = async ({ request }) => {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { session } = await authenticate.admin(request);
     const AllSurvey :any = await ListSurvey();
-  /*
-    for (const surveyItem of AllSurvey) {
-      const responses :any = await reponseSurve(surveyItem.survey_id);
-      console.log(`Survey Title: ${surveyItem.title}`);
-      console.log("Questions:");
-      for (const question of surveyItem.questions) {
-        console.log(`  Question ID: ${question.question_id}`);
-        console.log(`  Content: ${question.content}`);
-        console.log(`  Question Type: ${question.question_type}`);
-        console.log("  Responses:");
-        for (const response of responses) {
-          console.log(`    Response Content: ${response.content}`);
-          // Ajoutez d'autres détails de la réponse ici si nécessaire
-        }
-      }
-      console.log("------------------------------");
-    }
-  */
+ 
     return AllSurvey;
   };
   
@@ -201,7 +184,5 @@ export default function Survey() {
     );
   }
 
-function setdelete(arg0: boolean) {
-  throw new Error("Function not implemented.");
-}
+
   

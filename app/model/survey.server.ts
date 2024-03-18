@@ -51,3 +51,13 @@ export async function ListSurvey() {
   return getSurvey
 
 }
+export async function deleteSurv(id: number) {
+  const delSurvey = await db.survey.delete({where:{survey_id:id}}
+            
+          
+  )
+  if(!delSurvey){
+    return null
+}
+return delSurvey
+}
