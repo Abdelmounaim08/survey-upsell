@@ -2,7 +2,7 @@
 
 client_id = "1d7fa5ef990a295b06cf81588fce4894"
 name = "post-purchase-survey"
-application_url = "https://shop-consolidation-strange-complaint.trycloudflare.com"
+application_url = "https://muze-composite-host-subaru.trycloudflare.com"
 embedded = true
 
 [build]
@@ -16,9 +16,9 @@ scopes = "read_customers,read_orders,write_products"
 
 [auth]
 redirect_urls = [
-  "https://shop-consolidation-strange-complaint.trycloudflare.com/auth/callback",
-  "https://shop-consolidation-strange-complaint.trycloudflare.com/auth/shopify/callback",
-  "https://shop-consolidation-strange-complaint.trycloudflare.com/api/auth/callback"
+  "https://muze-composite-host-subaru.trycloudflare.com/auth/callback",
+  "https://muze-composite-host-subaru.trycloudflare.com/auth/shopify/callback",
+  "https://muze-composite-host-subaru.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]

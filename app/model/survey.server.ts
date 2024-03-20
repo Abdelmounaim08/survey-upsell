@@ -1,3 +1,5 @@
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import { json } from "@remix-run/node";
 import db from "../db.server"
 export async function Survey() {
     const getSurvey = await db.survey.findMany({
@@ -60,4 +62,49 @@ export async function deleteSurv(id: number) {
     return null
 }
 return delSurvey
+}
+export async function dataCustomer(dataCustomer: any) {
+  try {
+    const { customer, orderId, qst_rep } = dataCustomer;
+    const getSurveyid = await db.survey.findMany({
+      where: {
+        render: true,
+      },
+      select: {
+        survey_id: true,
+      },
+    });
+
+    const dataClient = await prisma.dataClient.create({
+      data: {
+        email: customer.email,
+        id_order: orderId,
+        survey: {
+          create: {
+            survey_id: getSurveyid[0].survey_id, // Assuming you want to use the first survey_id from the result
+          },
+        },
+        question_rep: {
+          createMany: {
+            data: qst_rep.map((response: any) => ({
+              question_id: response.question_id,
+              question: response.question,
+              response: response.response,
+            })),
+          },
+        },
+      },
+      include: {
+        survey: true,
+        question_rep: true,
+      },
+    });
+
+    console.log('New DataClient created:', dataClient);
+
+    // Retournez une réponse appropriée ici si nécessaire
+  } catch (error) {
+    console.error('Error creating DataClient:', error);
+    throw error;
+  }
 }

@@ -32,13 +32,13 @@ export { thankYouBlock };
 
 const orderDetailsBlock = reactExtension("customer-account.order-status.block.render", () => <ProductReview />);
 export { orderDetailsBlock };
-const APP_URL ='https://shop-consolidation-strange-complaint.trycloudflare.com';
+const APP_URL ='https://cradle-forecasts-transmitted-barnes.trycloudflare.com';
 
 function Attribution() {
   const [attribution, setAttribution] = useState('');
   const [loading, setLoading] = useState(false);
-  const { sessionToken,query } = useApi();
-  const APItest = useApi();
+  const { sessionToken} = useApi();
+  
  
   
   const [SurveyData, setSurveyData] = useState({});
@@ -144,18 +144,61 @@ function Survey({
       phone: '',
     },
     orderId: '',
+    qst_rep: responses
   });
+  
   const [reptext, settext] = useState('');
+  const [{ data }, setStorage] = useStorageState('infoCustomer');
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [isResponseChanged, setResponseChanged] = useState(false);
+  const [isvalid, setvalid] = useState(false);
+  const { sessionToken } = useApi();
   
   const handleValidate = () => {
+    setCustomerInfo((prevCustomerInfo) => ({
+      ...prevCustomerInfo,
+      customer: {
+        ...prevCustomerInfo.customer,
+        // Update customer fields if needed
+      },
+      qst_rep: responses
+    }));
     
     
+    console.log('customerInfo:', customerInfo);
+    //console.log('responses:', responses);
+    //setStorage(customerInfo);
+    setvalid(true);
   };
-  const { query } = useApi();
- 
   
+  useEffect(() => {
+    setStorage(customerInfo);
+    console.log('data:', data);
+  }, [customerInfo, data, setStorage]);
+  
+  const sendStorageToApi = async (storage) => {
+    const token = await sessionToken.get();
+    try {
+      const response = await fetch(`${APP_URL}/api/getDataCustomer`, {
+        method: 'POST',
+        mode: 'cors',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(storage)
+      });
+  
+      if (response.ok) {
+        const result = await response.json();
+        console.log(result);
+      }
+    } catch (e) {
+      console.error('Erreur lors de la récupération des sondages :', e);
+    }
+  };
+
  // console.log('customerInfo/',customerInfo)
   const handleNextQuestion = () => {
     setCurrentQuestionIndex(currentQuestionIndex + 1);
@@ -171,30 +214,47 @@ function Survey({
   async function handleSubmit() {
     // Soumettre l'ensemble des réponses
     await onSubmit(responses);
-
+    sendStorageToApi(data);
     // Marquer comme soumis
     setSubmitted(true);
   }
 
-  const handleResponseChange = (questionId, value) => {
+  const handleResponseChange = (question_id, question, value) => {
     // Créer une copie des réponses actuelles
     const updatedResponses = [...responses];
-
+  
     // Vérifier si la question a déjà une réponse dans les réponses existantes
-    const existingResponseIndex = updatedResponses.findIndex(response => response.questionId === questionId);
-
+    const existingResponseIndex = updatedResponses.findIndex(response => response.question === question);
+  
     // Si oui, mettre à jour la réponse existante
     if (existingResponseIndex !== -1) {
-      updatedResponses[existingResponseIndex] = { questionId, response: value };
+      // Vérifier si la valeur est déjà présente dans la réponse existante
+      const existingValues = updatedResponses[existingResponseIndex].response;
+      if (existingValues.includes(value)) {
+        // La valeur est déjà sélectionnée, la supprimer de la réponse
+        const updatedValues = existingValues.filter(val => val !== value);
+        if (updatedValues.length === 0) {
+          // Si la réponse ne contient plus aucune valeur, la supprimer de la liste des réponses
+          updatedResponses.splice(existingResponseIndex, 1);
+        } else {
+          // Mettre à jour la réponse existante avec les valeurs restantes
+          updatedResponses[existingResponseIndex].response = updatedValues;
+        }
+      } else {
+        // Ajouter la valeur à la réponse existante
+        updatedResponses[existingResponseIndex].response.push(value);
+      }
     } else {
-      // Sinon, ajouter une nouvelle réponse
-      updatedResponses.push({ questionId, response: value });
+      // Ajouter une nouvelle réponse avec la valeur sélectionnée
+      updatedResponses.push({ question_id, question, response: [value] });
     }
+  
     setResponseChanged(true);
     // Mettre à jour l'état des réponses
     setResponses(updatedResponses);
   };
-console.log(responses);
+
+//console.log(responses);
   if (submitted) {
     return (
       <View border="base" padding="base" borderRadius="base">
@@ -229,7 +289,8 @@ console.log(responses);
                       <>
                         <View>
   {surveyItem.questions[currentQuestionIndex].question_type === 'text' ? (
-    <TextField value={reptext} onChange={(e) => handleResponseChange(surveyItem.questions[currentQuestionIndex].content, e)} />
+    <TextField value={reptext} onChange={(e) => handleResponseChange(surveyItem.questions[currentQuestionIndex].question_id,
+      surveyItem.questions[currentQuestionIndex].content, e)} />
   ) : null}
   {surveyItem.questions[currentQuestionIndex].question_type === 'Radio' ? (
     <View key={index}>
@@ -242,7 +303,9 @@ console.log(responses);
           value="ship-1"
           onChange={(e) => {
             const content = filteredResponse.content;
-            handleResponseChange(surveyItem.questions[currentQuestionIndex].content, content);
+            handleResponseChange(surveyItem.questions[currentQuestionIndex].question_id,
+              surveyItem.questions[currentQuestionIndex].content,
+               content);
           }}
           >
           <Choice
@@ -258,8 +321,8 @@ console.log(responses);
         
     </View>
   ) : null}
-  {surveyItem.questions[currentQuestionIndex].question_type === 'Checkbox' ? (
-    <Checkbox>
+  {surveyItem.questions[currentQuestionIndex].question_type === 'checkbox' ? (
+    <View>
       {responseItem.filteredResponses
         .filter((filteredResponse) => filteredResponse.question_id === surveyItem.questions[currentQuestionIndex].question_id)
         .map((filteredResponse, index) => (
@@ -270,15 +333,16 @@ console.log(responses);
           
           onChange={(e) => {
             const content = filteredResponse.content;
-            handleResponseChange(surveyItem.questions[currentQuestionIndex].content, content);
+            handleResponseChange(surveyItem.questions[currentQuestionIndex].question_id 
+              ,surveyItem.questions[currentQuestionIndex].content,
+               content);
           }}
         >
           {filteredResponse.content}
         </Checkbox>
         
-        
         ))}
-    </Checkbox>
+    </View>
   ) : null}
 </View>
 
@@ -300,14 +364,16 @@ console.log(responses);
   onclick={handleNextQuestion}
   kind="secondary"
   onPress={handleNextQuestion}
-  disabled={!isResponseChanged}
+  disabled={currentQuestionIndex === surveyItem.questions.length - 1 || !isResponseChanged}
 >
   Suivant
 </Button>
 
                 </>
               </View>
-              <Button kind="secondary" onPress={handleSubmit} loading={loading}>
+              <Button kind="secondary" onPress={handleSubmit} loading={loading}
+               disabled={!isvalid}
+              >
                 Submit feedback
               </Button>
             </BlockStack>
@@ -397,41 +463,3 @@ function useStorageState(key) {
 
   return [{ data, loading }, setStorage]
 }
-//const filteredResponses = surveyItem.responses;
-  /* {surveyItem.questions.map((question) => {
-                //console.log("//////",surveyItem.questions[currentQuestionIndex]);
-               
-                console.log('responseItem',responseItem)
-                return (
-                  <><View key={surveyItem.questions[currentQuestionIndex].question_id} padding="base">
-                    <Heading>{surveyItem.questions[currentQuestionIndex].content}</Heading>
-                    <ChoiceList
-                      name="choice"
-                      value="first"
-                      onChange={(value) => {
-                        console.log(
-                          `onChange event with value: ${value}`
-                        );
-                      } }
-                    >
-                     <BlockStack>  {responseItem ? (
-                      <><View>
-                        {renderResponses(surveyItem.questions[currentQuestionIndex], responseItem)}
-                      </View>
-                      </>
-                    ) : (
-                      <Text>No responses available for this question.</Text>
-                    )}
-                      </BlockStack>  </ChoiceList>
-                  </View>
-                  <Button kind="secondary" onPress={handlePreviousQuestion} disabled={currentQuestionIndex === 0}>
-                      Précédent
-                    </Button><Button
-                      kind="secondary"
-                      onPress={handleNextQuestion}
-                      disabled={currentQuestionIndex === surveyData.length }
-                    >
-                      Suivant
-                    </Button></>
-                );
-              })}*/
