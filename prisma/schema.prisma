@@ -67,4 +67,5 @@ model QuestionReponse {
   question     Question   @relation(fields: [question_id], references: [question_id])
   dataClientId Int        @unique
   dataClient   DataClient @relation(fields: [dataClientId], references: [dataClientId])
+  reponse      String
 }

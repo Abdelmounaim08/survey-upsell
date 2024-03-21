@@ -6,8 +6,6 @@ import {
   reactExtension,
   BlockStack,
   View,
-  
-  
   Heading,
   Text,
   useApplyCartLinesChange,
@@ -32,21 +30,14 @@ export { thankYouBlock };
 
 const orderDetailsBlock = reactExtension("customer-account.order-status.block.render", () => <ProductReview />);
 export { orderDetailsBlock };
-const APP_URL ='https://cradle-forecasts-transmitted-barnes.trycloudflare.com';
+const APP_URL ='https://introduced-vsnet-appropriate-acts.trycloudflare.com';
 
 function Attribution() {
   const [attribution, setAttribution] = useState('');
   const [loading, setLoading] = useState(false);
   const { sessionToken} = useApi();
-  
- 
-  
   const [SurveyData, setSurveyData] = useState({});
   const [attributionSubmitted, setAttributionSubmitted] = useStorageState('attribution-submitted');
-
- 
-  
-  
   useEffect(() => {
 
     async function FetchfromApisSurvey() {
@@ -154,7 +145,8 @@ function Survey({
   const [isvalid, setvalid] = useState(false);
   const { sessionToken } = useApi();
   
-  const handleValidate = () => {
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const handleValidate = useCallback(() => {
     setCustomerInfo((prevCustomerInfo) => ({
       ...prevCustomerInfo,
       customer: {
@@ -163,18 +155,22 @@ function Survey({
       },
       qst_rep: responses
     }));
-    
+    setStorage(customerInfo);
     
     console.log('customerInfo:', customerInfo);
+    
+   
     //console.log('responses:', responses);
-    //setStorage(customerInfo);
+    
     setvalid(true);
-  };
+  });
   
   useEffect(() => {
     setStorage(customerInfo);
+    
     console.log('data:', data);
-  }, [customerInfo, data, setStorage]);
+
+  }, [customerInfo, data, setStorage,handleValidate]);
   
   const sendStorageToApi = async (storage) => {
     const token = await sessionToken.get();
@@ -444,7 +440,7 @@ function useStorageState(key) {
   const storage = useStorage();
   const [data, setData] = useState()
   const [loading, setLoading] = useState(true)
-  console.log(data);
+  //console.log(data);
   useEffect(() => {
     async function queryStorage() {
       const value = await storage.read(key)
